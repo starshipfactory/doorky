@@ -17,6 +17,11 @@ then
 	exit 1
 fi
 
+if [ x"$DOORNAME" = x ]
+then
+	DOORNAME="door"
+fi
+
 if ! test -f "$HOME/.doorky/secret"
 then
 	echo "Missing ~/.doorky/secret" 1>&2
@@ -37,9 +42,9 @@ do
 		# Hash the new value and the current time stamp
 		# and enc
 		ts=$(date +%s)
-		hash="$(echo -n "$newstate\n$ts" | openssl sha1 -sha256 -binary | openssl aes-256-cbc -kfile "$HOME/.doorky/secret" -md sha256 -e -base64 | tr -d "\n")"
-		ftp -i -o /dev/null "http://$DOORSTATUS_SERVER/api/doorstatus?val=$newstate&ts=$ts&hash=$hash" > /dev/null 2>&1
-		if [ x"$?" == 0 ]
+		hash="$(echo -n "$DOORNAME\n$newstate\n$ts" | openssl sha1 -sha256 -binary | openssl aes-256-cbc -kfile "$HOME/.doorky/secret" -md sha256 -e -base64 | tr -d "\n")"
+		ftp -i -o /dev/null "http://$DOORSTATUS_SERVER/api/doorstatus?door=$DOORNAME&val=$newstate&ts=$ts&hash=$hash" > /dev/null 2>&1
+		if [ x"$?" = 0 ]
 		then
 			oldstate="$newstate"
 		fi
