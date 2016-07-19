@@ -1,0 +1,3 @@
+create keyspace doorky with placement_strategy = 'org.apache.cassandra.locator.SimpleStrategy' and strategy_options = {replication_factor:1};
+
+create column family timeseries with comparator = 'AsciiType' and key_validation_class = 'DateType';

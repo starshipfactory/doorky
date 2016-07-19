@@ -22,3 +22,9 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# Generated Go protocol buffer implementation.
+*.pb.go
+
+# Programs compiled from this.
+receiver/receiver

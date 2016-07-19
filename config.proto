@@ -1,0 +1,38 @@
+package doorky;
+
+// Cassandra authentication credentials. Mostly a bunch of key/value pairs.
+message CassandraCredentials {
+    required string key = 1;
+    required string value = 2;
+}
+
+// Door credentials: map door names to their secrets. This is required to
+// authenticate submissions from the door.
+message DoorSecret {
+    // Name of the door which the client transmits.
+    required string name = 1;
+
+    // Secret the door will use to authenticate its submissions.
+    required string secret = 2;
+}
+
+// The sum of all configuration settings for doorky.
+message DoorkyConfig {
+    // Host name and port pair of the Cassandra database server holding the
+    // time series database.
+    optional string db_server = 1 [default = "localhost:9160"];
+
+    // Integer number of milliseconds to wait for a connection to the database
+    // server.
+    optional int32 db_timeout = 2 [default = 30000];
+
+    // Cassandra authentication credentials.
+    repeated CassandraCredentials db_credentials = 3;
+
+    // Cassandra Keyspace to connect to.
+    optional string keyspace = 4 [default = "doorky"];
+
+    // Secret configured to authenticate timeseries data collected from the
+    // doorky sender.
+    repeated DoorSecret secret = 5;
+}
