@@ -43,7 +43,7 @@ do
 		# and enc
 		ts=$(date +%s)
 		iv=$(openssl rand -hex 16)
-		hash="$(echo -n "$DOORNAME\n$newstate\n$ts" | openssl sha1 -sha256 -binary | openssl aes-256-cbc -iv "$iv" -kfile "$HOME/.doorky/secret" -md sha256 -e -base64 | tr "+/" "-_" | tr -d "\n")"
+		hash="$(echo -n "$DOORNAME\n$newstate\n$ts" | openssl sha1 -sha256 -binary | openssl aes-256-cbc -iv "$iv" -kfile "$HOME/.doorky/secret" -md sha256 -e -base64 -nosalt -nopad | tr "+/" "-_" | tr -d "\n")"
 		ftp -i -o /dev/null "http://$DOORSTATUS_SERVER/api/doorstatus?door=$DOORNAME&val=$newstate&ts=$ts&hash=$hash&iv=$iv" > /dev/null 2>&1
 		if [ x"$?" = 0 ]
 		then
