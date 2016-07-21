@@ -18,6 +18,7 @@ func main() {
 	var ts *doorky.Timeseries
 
 	var wapi *WriteAPI
+	var sapi *SpaceAPI
 
 	var config doorky.DoorkyConfig
 	var configPath string
@@ -53,8 +54,12 @@ func main() {
 	}
 
 	wapi = NewWriteAPI(ts, secrets)
-
 	http.Handle("/api/doorstatus", wapi)
+
+	if config.SpaceapiMd != nil {
+		sapi = NewSpaceAPI(ts, &config)
+		http.Handle("/api/spaceapi", sapi)
+	}
 	err = http.ListenAndServe(bindAddress, nil)
 	if err != nil {
 		log.Fatal("Error listening to ", bindAddress, ": ", err)

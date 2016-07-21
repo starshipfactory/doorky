@@ -1,3 +1,5 @@
+syntax = "proto2";
+
 package doorky;
 
 // Cassandra authentication credentials. Mostly a bunch of key/value pairs.
@@ -14,6 +16,485 @@ message DoorSecret {
 
     // Secret the door will use to authenticate its submissions.
     required string secret = 2;
+}
+
+// Detailed location data for the hackerspace.
+message SpaceAPILocation {
+    // Street address of the space.
+    required string address = 1;
+
+    // Geographic latitude of the space.
+    required float lat = 2;
+
+    // Geographic longitude of the space.
+    required float lon = 3;
+}
+
+// SpaceFED metadata.
+message SpaceAPIFED {
+    // Whether SpaceNET is supported.
+    required bool spacenet = 1;
+
+    // Whether SpaceSAML is supported.
+    required bool spacesaml = 2;
+
+    // Whether SpacePhone is supported.
+    required bool spacephone = 3;
+}
+
+// Icons representing the open and closed state of the space.
+message SpaceAPIStateIcons {
+    // URL to an icon to be displayed when the space is open.
+    required string open = 1;
+
+    // URL to an icon to be displayed when the space is closed.
+    required string closed = 2;
+}
+
+// Complete representation of the opening state of the space, including recent
+// history and additional details of some sort.
+message SpaceAPIState {
+    // Simple flag indicating whether the space is open.
+    required bool open = 1;
+
+    // UNIX timestamp of the most recent state change.
+    optional int64 lastchange = 2;
+
+    // Person who caused the last state change.
+    optional string trigger_person = 3;
+
+    // Free-form text message describing the current state.
+    optional string message = 4;
+
+    // Optional URLs to the icons to be displayed indicating the hackerspace
+    // opening status.
+    optional SpaceAPIStateIcons icon = 5;
+}
+
+// Event which recently took place at the hackerspace.
+message SpaceAPIEvent {
+    // Subject of the event taking place, free-text.
+    required string name = 1;
+
+    // Type of the event; this should be some kind of locally relevant
+    // classification, but there are no global definitions.
+    required string type = 2;
+
+    // UNIX time stamp from the exact point in time when the event took place.
+    required int64 timestamp = 3;
+
+    // Custom extra description text concerning the event.
+    optional string extra = 4;
+}
+
+// SpaceAPI description of a person carrying a key who can be contacted in some
+// way to get access to the space.
+message SpaceAPIKeymaster {
+    // Name of the person.
+    optional string name = 1;
+
+    // Nick of the person on the IRC channel defined as contact for the space.
+    optional string irc_nick = 2;
+
+    // Phone number to call up that person.
+    optional string phone = 3;
+
+    // EMail address to contact said keymaster.
+    optional string email = 4;
+
+    // Twitter handle for said keymaster, with leading @.
+    optional string twitter = 5;
+}
+
+// Google contact information for the SpaceAPI.
+message SpaceAPIGoogleContact {
+    // Google+ URL of the spaces profile.
+    optional string plus = 1;
+}
+
+// Object describing ways to contact the hackerspace, to be exported in the
+// SpaceAPI. While all fields are technically optional, at least one of them
+// must be filled with meaningful data.
+message SpaceAPIContact {
+    // Phone number to call for contacting the space. Should include a country
+    // code and a leading plus sign.
+    optional string phone = 1;
+
+    // SIP number as a sip: URL for calling up the space.
+    optional string sip = 2;
+
+    // List of people to contact for getting access to the space if not present
+    // during normal hours.
+    repeated SpaceAPIKeymaster keymasters = 3;
+
+    // URL of an IRC channel which is used to communicate with members of the
+    // space.
+    optional string irc = 4;
+
+    // Twitter handle of the space, including leading @ character.
+    optional string twitter = 5;
+
+    // URL to the facebook account of the space.
+    optional string facebook = 6;
+
+    // Google contact URLs.
+    optional SpaceAPIGoogleContact google = 7;
+
+    // StatusNet account in the form of user@domain.org
+    optional string identica = 8;
+
+    // Foursquare ID of the space, in the form 4d8a9114d85f3704eab301dc.
+    optional string foursquare = 9;
+
+    // Email address to contact the space; not to be used for mailing lists.
+    optional string email = 10;
+
+    // Mailing list email address (there it is!) to contact people pertaining
+    // to the space.
+    optional string ml = 11;
+
+    // Public Jabber chat room to join for contacting members of the space.
+    optional string jabber = 12;
+
+    // Separate email address which can be used to report issues with the space.
+    optional string issue_mail = 13;
+}
+
+// Temperature data from temperature sensors with some additional information
+// about the sensor and the reading.
+message SpaceAPITemperatureSensor {
+    // Measured value from the sensor.
+    required double value = 1;
+
+    // Unit the value is presented in. May be one of °C, °F, K, °De, °N, °R,
+    // °Ré, °Rø.
+    required string unit = 2;
+
+    // Brief text describing the location of the sensor inside the property,
+    // such as Outside, Inside, Roof or something like that.
+    required string location = 3;
+
+    // Name assigned to the sensor, if any.
+    optional string name = 4;
+
+    // Additional text optionally providing more information about the sensor.
+    optional string description = 5;
+}
+
+// Lock sensor providing information about whether a given door is locked.
+message SpaceAPIDoorLockSensor {
+    // Flag indicating whether or not the lock is closed.
+    required bool value = 1;
+
+    // Brief description of the location of the door, such as "front door".
+    required string location = 2;
+
+    // Optional name associated with the specific lock, if there are multiple
+    // locks roughly in the same location.
+    optional string name = 3;
+
+    // Additional text giving more information about the lock.
+    optional string description = 4;
+}
+
+// Barometric data from barometric sensors with some additional information
+// about the sensor and the reading.
+message SpaceAPIBarometerSensor {
+    // Measured value from the sensor.
+    required double value = 1;
+
+    // Unit the value is presented in. Has to be hPa for now.
+    required string unit = 2;
+
+    // Brief text describing the location of the sensor inside the property,
+    // such as Outside, Inside, Roof or something like that.
+    required string location = 3;
+
+    // Name assigned to the sensor, if any.
+    optional string name = 4;
+
+    // Additional text optionally providing more information about the sensor.
+    optional string description = 5;
+}
+
+// Humidity data from sensors with some additional information about the sensor
+// and the reading.
+message SpaceAPIHumiditySensor {
+    // Measured value from the sensor.
+    required double value = 1;
+
+    // Unit the value is presented in. Has to be % for now.
+    required string unit = 2;
+
+    // Brief text describing the location of the sensor inside the property,
+    // such as Outside, Inside, Roof or something like that.
+    required string location = 3;
+
+    // Name assigned to the sensor, if any.
+    optional string name = 4;
+
+    // Additional text optionally providing more information about the sensor.
+    optional string description = 5;
+}
+
+// Information about the amount of beverages available in the space.
+message SpaceAPIBeverageSupply {
+    // Measured value from the sensor.
+    required double value = 1;
+
+    // Unit the value is presented in. May be btl for bottle or crt for crates.
+    required string unit = 2;
+
+    // Brief text describing the location of the beverages inside the property,
+    // such as Fridge, Kitchen or something like that.
+    optional string location = 3;
+
+    // Name of the type of beverage which is available.
+    optional string name = 4;
+
+    // Additional text optionally providing more information about the sensor.
+    optional string description = 5;
+}
+
+// Readings from power consumption sensors in the space.
+message SpaceAPIPowerConsumption {
+    // Measured value from the sensor.
+    required double value = 1;
+
+    // Unit the value is presented in, such as mW, W, VA.
+    required string unit = 2;
+
+    // Brief text describing the location of the sensor inside the property,
+    // such as Outside, Inside, Roof or something like that.
+    required string location = 3;
+
+    // Name assigned to the sensor, if any.
+    optional string name = 4;
+
+    // Additional text optionally providing more information about the sensor.
+    optional string description = 5;
+}
+
+// Detailed information about the number of active clients by network.
+message SpaceAPINetworkConnections {
+    message Machine {
+        optional string name = 1;
+        required string mac = 2;
+    }
+
+    // The type of network which the connections are on. May be one of:
+    // wifi, cable or spacenet.
+    optional string type = 1;
+
+    // Number of active network connections in said configuration.
+    required int64 value = 2;
+
+    // List of machines active on the network.
+    repeated Machine machines = 3;
+
+    // Location of the sensor inside the space, such as Outside, Roof, etc.
+    optional string location = 4;
+
+    // Name of the sensor used.
+    optional string name = 5;
+
+    // Optional free text describing the setup used in more detail.
+    optional string description = 6;
+}
+
+// Financial data about the hackerspace.
+message SpaceAPIAccountBalance {
+    // Amount of money the space has at disposition.
+    required double value = 1;
+
+    // Unit of the money; so this would be an ISO-4217 currency. Currently only
+    // allows one of BTC, EUR, USD or GBP.
+    required string unit = 2;
+
+    // Location the money is supposed to be in, if multiple accounts are to be
+    // separated.
+    optional string location = 3;
+
+    // Name assigned to the bank account, to tell multiple accounts apart.
+    optional string name = 4;
+
+    // Free text description of the bank account with additional detail.
+    optional string description = 5;
+}
+
+// Data about the members of the space.
+message SpaceAPIMemberCount {
+    // Total number of members with the properties mentioned below (if any).
+    required int64 value = 1;
+
+    // Location of those members; useful if the space is partitioned into
+    // multiple separate locations.
+    optional string location = 2;
+
+    // Additional criterion setting those members apart, e.g. active/inactive.
+    optional string name = 3;
+
+    // More detailed information as free text.
+    optional string description = 4;
+}
+
+// Data about people currently present in the hackerspace.
+message SpaceAPIPeopleNowPresent {
+    // Total count of members fulfilling the specific criteria.
+    required int64 value = 1;
+
+    // Location of those members; useful if the space is partitioned into
+    // multiple separate locations or rooms.
+    optional string location = 2;
+
+    // Name of whatever sets these people apart from others.
+    optional string name = 3;
+
+    // Names of the members currently present in the space/room/location.
+    repeated string names = 4;
+
+    // More detailed information as free text.
+    optional string description = 5;
+}
+
+// Data from sensors in the space.
+message SpaceAPISensors {
+    // Data from temperature sensors.
+    repeated SpaceAPITemperatureSensor temperature = 1;
+
+    // Data from door lock sensors.
+    repeated SpaceAPIDoorLockSensor door_locked = 2;
+
+    // Data from barometer sensors.
+    repeated SpaceAPIBarometerSensor barometer = 3;
+
+    // Data from humidity sensors.
+    repeated SpaceAPIHumiditySensor humidity = 4;
+
+    // Information about beverages in the space.
+    repeated SpaceAPIBeverageSupply beverage_supply = 5;
+
+    // Sensor readings about power consumption in the space.
+    repeated SpaceAPIPowerConsumption power_consumption = 6;
+
+    // Information about active network connections in the space.
+    repeated SpaceAPINetworkConnections network_connections = 7;
+
+    // Information about bank accounts of the space and money on those.
+    repeated SpaceAPIAccountBalance account_balance = 8;
+
+    // Information about the number of active members in the space.
+    repeated SpaceAPIMemberCount total_member_count = 9;
+
+    // Information about the number and potentially names of people present in
+    // the space.
+    repeated SpaceAPIPeopleNowPresent people_now_present = 10;
+}
+
+// Feed object for a data feed presented through the SpaceAPI.
+message SpaceAPIFeedData {
+    // The type of feed which is provided. May be one of rss, atom or ical.
+    optional string type = 1;
+
+    // URL the feed data object is pointed at.
+    required string url = 2;
+}
+
+// Data about different types of feeds with additional information about the
+// space.
+message SpaceAPIFeeds {
+    // Blog feeds with news about the space.
+    optional SpaceAPIFeedData blog = 1;
+
+    // Wiki with in-depth information about various things of the space.
+    optional SpaceAPIFeedData wiki = 2;
+
+    // Calendar with events happening in the space.
+    optional SpaceAPIFeedData calendar = 3;
+
+    // Flickr photo stream with lots of photos from the space.
+    optional SpaceAPIFeedData flickr = 4;
+}
+
+// Cache settings
+message SpaceAPICacheSettings {
+    // Schedule on which to expire cached records. Format: {unit}.{2-quantity},
+    // e.g. m.02 for 2 minutes or h.12 for 12 hours.
+    required string schedule = 1;
+}
+
+// Radio show or podcast produced by (members of) the hackerspace.
+message SpaceAPIRadioShow {
+    // Name of the radio show or podcast.
+    required string name = 1;
+
+    // URL to the stream of the radio show.
+    required string url = 2;
+
+    // Encoding of the stream. May be one of mp3 or ogg.
+    required string type = 3;
+
+    // Starting time of the radio show as an ISO-8601 time stamp.
+    required string start = 4;
+
+    // Ending time of the radio show as an ISO-8601 time stamp.
+    required string end = 5;
+}
+
+// Root metadata object for the SpaceAPI export. Some attributes must be set
+// in order to use the SpaceAPI.
+message SpaceAPIMetadata {
+    // API version in use. You probably shouldn't have to change that.
+    optional string api = 1 [default = "0.13"];
+
+    // Name of the hackerspace.
+    required string space = 2;
+
+    // URL pointing to the logo of the hackerspace.
+    required string logo = 3;
+
+    // URL pointing to the space website.
+    required string url = 4;
+
+    // Geolocation information of the space.
+    required SpaceAPILocation location = 5;
+
+    // If SpaceFED is supported, this will contain information of what exactly
+    // works in this space.
+    optional SpaceAPIFED spacefed = 6;
+
+    // List of URLs pointing to webcams located in the space.
+    repeated string cam = 7;
+
+    // Representation of the state of the hackerspace.
+    required SpaceAPIState state = 8;
+
+    // Events which recently took place at the space.
+    repeated SpaceAPIEvent events = 9;
+
+    // Contact data for the space.
+    required SpaceAPIContact contact = 10;
+
+    // Means to contact the owners of the SpaceAPI entry about issues with the
+    // SpaceAPI feed. Possible values: email, issue_mail, twitter, ml. There
+    // must be at least one value.
+    repeated string issue_report_channels = 11;
+
+    // Sensor data collected from sensors located in the space.
+    optional SpaceAPISensors sensors = 12;
+
+    // Feeds recommended for consumption to the users.
+    optional SpaceAPIFeeds feeds = 13;
+
+    // Settings for caching and refreshing record.
+    optional SpaceAPICacheSettings cache = 14;
+
+    // List of URLs (github, wikis, whatever) of projects in progress in the
+    // space.
+    repeated string projects = 15;
+
+    // Radio shows about the space.
+    repeated SpaceAPIRadioShow radio_show = 16;
 }
 
 // The sum of all configuration settings for doorky.
@@ -35,4 +516,7 @@ message DoorkyConfig {
     // Secret configured to authenticate timeseries data collected from the
     // doorky sender.
     repeated DoorSecret secret = 5;
+
+    // SpaceAPI metadata.
+    optional SpaceAPIMetadata spaceapi_md = 6;
 }
