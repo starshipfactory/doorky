@@ -3,6 +3,7 @@ package doorky
 import (
 	"database/cassandra"
 	"encoding/binary"
+	"errors"
 	"time"
 )
 
@@ -57,7 +58,7 @@ func (ts *Timeseries) Insert(door string, stamp time.Time, value bool) error {
 	var cp = cassandra.NewColumnParent()
 	var col = cassandra.NewColumn()
 	var timestamp = stamp.UnixNano() / 1000
-	var tsdata []byte = make([]byte, 8)
+	var tsdata = make([]byte, 8)
 
 	binary.BigEndian.PutUint64(tsdata, uint64(-timestamp))
 
@@ -72,4 +73,45 @@ func (ts *Timeseries) Insert(door string, stamp time.Time, value bool) error {
 	}
 
 	return ts.db.Insert(tsdata, cp, col, cassandra.ConsistencyLevel_QUORUM)
+}
+
+// LastValue looks up the most recent value of the specified time series.
+func (ts *Timeseries) LastValue(door string) (
+	stamp time.Time, value bool, err error) {
+	var cp = cassandra.NewColumnParent()
+	var pred = cassandra.NewSlicePredicate()
+	var kr = cassandra.NewKeyRange()
+	var kss []*cassandra.KeySlice
+	var ks *cassandra.KeySlice
+	var timestamp uint64
+
+	cp.ColumnFamily = "timeseries"
+	pred.ColumnNames = [][]byte{[]byte(door)}
+	kr.StartKey = []byte{}
+	kr.EndKey = []byte{}
+	kr.Count = 1
+
+	kss, err = ts.db.GetRangeSlices(cp, pred, kr, cassandra.ConsistencyLevel_ONE)
+	if err != nil {
+		return
+	}
+
+	for _, ks = range kss {
+		var cos *cassandra.ColumnOrSuperColumn
+		timestamp = binary.BigEndian.Uint64(ks.Key)
+		stamp = time.Unix(int64(timestamp/1000), int64((timestamp%1000)*1000))
+
+		for _, cos = range ks.Columns {
+			if cos.Column != nil {
+				var col = cos.Column
+				if string(col.Name) == door {
+					value = (col.Value[0] == 1)
+					return
+				}
+			}
+		}
+	}
+
+	err = errors.New("No value found for " + door)
+	return
 }

@@ -32,6 +32,7 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var ok bool
 	var md *doorky.SpaceAPIMetadata
 	var jsonEnc = json.NewEncoder(rw)
+	var door *doorky.DoorSecret
 
 	md, ok = msg.(*doorky.SpaceAPIMetadata)
 	if !ok {
@@ -39,5 +40,28 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		http.Error(rw, http.StatusText(http.StatusInternalServerError),
 			http.StatusInternalServerError)
 	}
+
+	for _, door = range a.conf.Secret {
+		var lockInfo = new(doorky.SpaceAPIDoorLockSensor)
+		var name = door.GetName()
+		var locked bool
+		var err error
+
+		_, locked, err = a.ts.LastValue(name)
+		if err != nil {
+			log.Print("Error fetching door status for ", name, ": ", err)
+			continue
+		}
+
+		lockInfo.Value = proto.Bool(locked)
+		lockInfo.Location = proto.String(door.GetLocation())
+		lockInfo.Name = proto.String(name)
+
+		if md.Sensors == nil {
+			md.Sensors = new(doorky.SpaceAPISensors)
+		}
+		md.Sensors.DoorLocked = append(md.Sensors.DoorLocked, lockInfo)
+	}
+
 	jsonEnc.Encode(md)
 }

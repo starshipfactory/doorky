@@ -16,6 +16,9 @@ message DoorSecret {
 
     // Secret the door will use to authenticate its submissions.
     required string secret = 2;
+
+    // Location information for the door.
+    required string location = 3;
 }
 
 // Detailed location data for the hackerspace.
