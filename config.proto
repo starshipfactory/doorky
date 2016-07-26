@@ -522,4 +522,8 @@ message DoorkyConfig {
 
     // SpaceAPI metadata.
     optional SpaceAPIMetadata spaceapi_md = 6;
+
+    // The name of the primary door which will be used to report whether the
+    // space itself is open.
+    optional string primary_door = 7;
 }

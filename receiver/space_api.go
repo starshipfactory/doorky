@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/starshipfactory/doorky"
@@ -44,10 +45,11 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	for _, door = range a.conf.Secret {
 		var lockInfo = new(doorky.SpaceAPIDoorLockSensor)
 		var name = door.GetName()
+		var ts time.Time
 		var locked bool
 		var err error
 
-		_, locked, err = a.ts.LastValue(name)
+		ts, locked, err = a.ts.LastValue(name)
 		if err != nil {
 			log.Print("Error fetching door status for ", name, ": ", err)
 			continue
@@ -56,11 +58,17 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		lockInfo.Value = proto.Bool(locked)
 		lockInfo.Location = proto.String(door.GetLocation())
 		lockInfo.Name = proto.String(name)
+		lockInfo.Description = proto.String("Last update: " + ts.String())
 
 		if md.Sensors == nil {
 			md.Sensors = new(doorky.SpaceAPISensors)
 		}
 		md.Sensors.DoorLocked = append(md.Sensors.DoorLocked, lockInfo)
+
+		if a.conf.PrimaryDoor != nil && a.conf.GetPrimaryDoor() == name {
+			md.State.Open = proto.Bool(!locked)
+			md.State.Lastchange = proto.Int64(ts.Unix())
+		}
 	}
 
 	jsonEnc.Encode(md)
