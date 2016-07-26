@@ -98,8 +98,9 @@ func (ts *Timeseries) LastValue(door string) (
 
 	for _, ks = range kss {
 		var cos *cassandra.ColumnOrSuperColumn
-		timestamp = binary.BigEndian.Uint64(ks.Key)
-		stamp = time.Unix(int64(timestamp/1000), int64((timestamp%1000)*1000))
+		timestamp = -binary.BigEndian.Uint64(ks.Key)
+		stamp = time.Unix(int64(timestamp/1000000),
+			int64((timestamp%1000000)*1000))
 
 		for _, cos = range ks.Columns {
 			if cos.Column != nil {
