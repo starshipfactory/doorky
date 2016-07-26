@@ -30,10 +30,11 @@ func NewSpaceAPI(ts *doorky.Timeseries, conf *doorky.DoorkyConfig) *SpaceAPI {
 // back to the requestor.
 func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	var msg = proto.Clone(a.conf.SpaceapiMd)
-	var ok bool
 	var md *doorky.SpaceAPIMetadata
-	var jsonEnc = json.NewEncoder(rw)
 	var door *doorky.DoorSecret
+	var out []byte
+	var err error
+	var ok bool
 
 	md, ok = msg.(*doorky.SpaceAPIMetadata)
 	if !ok {
@@ -47,7 +48,6 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		var name = door.GetName()
 		var ts time.Time
 		var locked bool
-		var err error
 
 		ts, locked, err = a.ts.LastValue(name)
 		if err != nil {
@@ -71,5 +71,16 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	jsonEnc.Encode(md)
+	out, err = json.MarshalIndent(md, "    ", "    ")
+	if err != nil {
+		log.Print("Error marshalling JSON: ", err)
+		http.Error(rw, http.StatusText(http.StatusInternalServerError)+": "+
+			"Error marshalling response: "+err.Error(),
+			http.StatusInternalServerError)
+	}
+
+	_, err = rw.Write(out)
+	if err != nil {
+		log.Print("Error writing response: ", err)
+	}
 }
