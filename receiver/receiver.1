@@ -1,0 +1,308 @@
+.\" Hey, EMACS: -*- nroff -*-
+.TH RECEIVER "1" "Aug 2016" "receiver"
+.SH NAME
+receiver \- 
+.SM SpaceAPI
+data collector and reexporter
+.SH SYNOPSIS
+.TP
+.B receiver \fI--config=PATH\fR \fI--bind=HOST:PORT\fR
+.SH DESCRIPTION
+.PP
+.B receiver
+is an HTTP server for collecting and reexporting data through the
+.SM SpaceAPI
+interface.
+See also
+.I http://spaceapi.net/
+A separate API is provided to allow submitting various types of data points via
+HTTP requests which will be provided to
+.SM SpaceAPI
+requestors as sensor data.
+.SH OPTIONS
+.TP
+.B \-\-config=PATH
+specifies the path of a configuration file specifying how to receive and where
+ to store sensor data as well as other information to be presented back to
+.SM SpaceAPI
+clients.
+.TP
+.B \-\-bind=HOST:PORT
+or
+.B \-\-bind=PORT
+specifies what host (optional) and port to listen on for connections providing
+data or requesting a
+.SM SpaceAPI
+JSON dump.
+.SH SECURITY
+.PP
+.B receiver
+does not need any special access except to the timeseries database and the
+configuration files. Any data contained therein is, by definition, public, so
+as long as data in the database is properly isolated,
+.B receiver
+doesn't have access to any private data.
+.PP
+Data written to the API is protected
+.PP
+Potential for improvement:
+.PP
+.PD 0
+.PP
+.PD
+\(bu
+Use the submission timestamp to ensure that submitted timeseries data always
+goes forward and that an individual timestamp is not written twice to avoid a
+DDoS on the database server.
+.PP
+.PD
+\(bu
+Add salt and padding features to the signature process used to verify submitted
+timeseries data.
+.SH "CONFIGURATION FILE"
+.PP
+The
+.B receiver
+configuration file contains of a number of
+.IR key :
+.I value
+pairs, some of which are organized into sections.
+.PP
+The following sections are recognized in the root level:
+.TP
+.BI db_server " optional
+.I host:port
+pair to connect to for the
+.IR cassandra (8)
+database server.
+.TP
+.BI db_timeout " optional
+Number of milliseconds to wait for database operations to complete before
+declaring a timeout error.
+.TP
+.BI keyspace " optional
+Name of the
+.IR cassandra (8)
+keyspace to use for timeseries storage.
+.TP
+.BI primary_door " optional
+Name of the door timeseries (as specified in the
+.I secret
+section (under
+.IR name ).
+.PP
+The following sections are recognized and can be specified by name followed
+with an opening curly bracket, e.g.
+.PP
+.RS 0
+section {
+.RS 0
+	key: value
+.RS 0
+	key: value2
+.RS 0
+	otherkey: value
+.RS 0
+}
+.SS cassandra_credentials
+The
+.I cassandra_credentials
+section defines
+.IR cassandra (8)
+database access credentials of all types.
+Multiple types of credentials can be described by repeating the section.
+.PP
+Each credential consists of a key and value which are specified as follows:
+.TP
+.BI key " required
+Name of the type of credential which is being specified, e.g.
+.IR user .
+.TP
+.BI value " required
+Actual value of the type of credential being presented, e.g. an user name.
+.SS secret
+The
+.I secret
+section is used to describe secrets which will be used by door state clients
+to submit data to the receiver.
+It is keyed by the door name and specifies both the secret to be used for
+verification of data submitted by the door and a text description of the
+location of the door to be used in the
+.SM SpaceAPI
+metadata.
+.TP
+.BI name " required
+Name of the door as a string, which will be used to tell multiple door sensors
+apart.
+This should be an alphanumeric string.
+.TP
+.BI secret " required
+Secret string to be used for verifying data submitted by the sensor.
+This will be processed by a SHA-256 hash so it can really be anything
+whatsoever.
+.TP
+.BI location " required
+Text description of the location of the door, which will be exported through
+the
+.SM SpaceAPI
+to requestors.
+.SS spaceapi_md
+.PP
+Contains a complete description of the data exported through
+.SM SpaceAPI
+except for pieces which will be filled in by this API.
+This will be used as a template for the response sent back to the client, so
+it must contain required
+.SM SpaceAPI
+fields such as the space name and location.
+.PP
+The data needs to be formatted exactly in the way specified above, i.e. as
+a text protocol buffer.
+.PP
+The
+.I spaceapi_md.state.open
+field has to be filled in though since it is marked as
+.I required
+in the
+.SM SpaceAPI
+definition.
+.PP
+For a complete description of the fields available in
+.SM SpaceAPI
+please refer to the specification at
+.I http://spaceapi.net/documentation
+.PP
+Currently, version 0.13 of the
+.SM SpaceAPI
+is supported.
+.SH "EXAMPLE CONFIGURATION"
+.PP
+An example configuration file might look just about like this:
+.PP
+.RS 0
+db_server: "database.example.com:9160"
+.RS 0
+db_timeout: 5000
+.RS 0
+db_credentials {
+.RS 0
+	key: "user"
+.RS 0
+	value: "exampleuser"
+.RS 0
+}
+.RS 0
+db_credentials {
+.RS 0
+	key: "password"
+.RS 0
+	value: "letmein"
+.RS 0
+}
+.RS 0
+keyspace: "doorky"
+.RS 0
+secret {
+.RS 0
+	name: "one"
+.RS 0
+	secret: "letmein1"
+.RS 0
+	location: "Front door"
+.RS 0
+}
+.RS 0
+secret {
+.RS 0
+	name: "two"
+.RS 0
+	secret: "letmein2"
+.RS 0
+	location: "Back door"
+.RS 0
+}
+.RS 0
+primary_door: "one"
+.RS 0
+spaceapi_md {
+.RS 0
+	api: "0.13"
+.RS 0
+	space: "OurSpace"
+.RS 0
+	logo: "https://ourspace.example.org/logo.png"
+.RS 0
+	url: "https://ourspace.example.org/"
+.RS 0
+	state {
+.RS 0
+		# Template value, overridden by API
+.RS 0
+		open: false
+.RS 0
+		lastchange: 1470014184
+.RS 0
+	}
+.RS 0
+	contact {
+.RS 0
+		irc: "ircs://irc.freenode.net/#example"
+.RS 0
+		twitter: "@example"
+.RS 0
+		ml: "ourspace\-open@example.org"
+.RS 0
+		jabber: "open@ourspace.example.org"
+.RS 0
+	}
+.RS 0
+	issue_report_channels: "twitter"
+.RS 0
+	issue_report_channels: "ml"
+.RS 0
+	feeds {
+.RS 0
+		blog {
+.RS 0
+			type: "rss"
+.RS 0
+			url: "https://ourspace.example.org/feeds/"
+.RS 0
+		}
+.RS 0
+		wiki {
+.RS 0
+			type: "rss"
+.RS 0
+			url: "https://wiki.ourspace.example.org/Wiki/Letzte_Aenderungen/index.rss"
+.RS 0
+		}
+.RS 0
+		wiki {
+.RS 0
+			type: "atom"
+.RS 0
+			url: "https://wiki.ourspace.example.org/Wiki/Letzte_Aenderungen/index.atom"
+.RS 0
+		}
+.RS 0
+	}
+.RS 0
+	projects: "https://github.com/starshipfactory/doorky"
+.RS 0
+	projects: "https://github.com/starshipfactory/elna-discs"
+.RS 0
+}
+.SH AUTHOR
+Written by Caoimhe Chaos.
+.SH "REPORTING BUGS"
+Please report bugs on github at
+.I https://github.com/starshipfactory/doorky/issues
+or send a pull request to
+.IR https://github.com/starshipfactory/doorky .
+.SH COPYRIGHT
+Copyright \(co 2016 Caoimhe Chaos, Starship Factory. All Rights Reserved.
+.PP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the conditions outlined in the
+3-Clause BSD license are met.
