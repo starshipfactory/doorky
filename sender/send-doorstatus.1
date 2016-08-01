@@ -1,0 +1,89 @@
+\" Hey, EMACS: -*- nroff -*-
+.TH SEND-DOORSTATUS.SH "1" "Aug 2016" "send-doorstatus.sh"
+.SH NAME
+send\-doorstatus.sh \- Read door status and post updates to an HTTP server
+.SH SYNOPSIS
+.TP
+.B send-doorstatus.sh
+.PP
+(No flags needed or supported)
+.SH DESCRIPTION
+.PP
+.B send-doorstatus.sh
+reads the open/close state of a simple switch door sensor and sends any changes
+in the state to an HTTP server.
+An NTP server is used to regularly update the time on the client so it can be
+transmitted along with the value for verification.
+.PP
+The data submitted is secured by a cryptographic verification code generated
+from a shared secret, the name of the sensor, the submitted state and the
+current time stamp as seconds since Jan 1 1970, all represented in ASCII.
+.PP
+The value is checked every 30 seconds and reported only upon change.
+.SH FILES
+.PP
+.B send-doorstatus.sh
+reads the file
+.I .doorky/config
+in the home directory of the user invoking it.
+.PP
+However, all values can also be read from environment variables.
+.PP
+Additionally, the contents of the file
+.I .doorky/secret
+are used as a shared secretfor encryption purposes.
+.SH "CONFIGURATION FILES"
+.PP
+The
+.I .doorky/config
+configuration file needs to be shell formatted, so ideally all values should be
+specified as
+.IR key =
+.I "value"
+pairs.
+Case sensitive matters.
+.PP
+The following configuration settings are supported:
+.TP
+.BI DOORSTATUS_SERVER " required
+Name of the HTTP server to submit the data to via HTTP.
+Can be specified as
+.I hostname
+or
+.IR hostname : port .
+.TP
+.BI NTP_SERVER " required
+Name or address of an NTP server to use for making sure the time is up to date.
+.TP
+.BI DOORNAME " optional
+Alphanumeric string identifying the door sensor.
+This must match the value specified on the server side.
+Default:
+.I door
+.PP
+The
+.I .doorky/secret
+configuration file only contains the secret with no formatting whatsoever.
+.SH "EXAMPLE CONFIGURATION"
+.PP
+An example configuration file might look just about like this:
+.PP
+.RS 0
+DOORSTATUS_SERVER="door.api.example.org"
+.RS 0
+NTP_SERVER="pool.ntp.org"
+.RS 0
+DOORNAME="alfred"
+.SH AUTHOR
+Written by Caoimhe Chaos.
+.SH "REPORTING BUGS"
+Please report bugs on github at
+.I https://github.com/starshipfactory/doorky/issues
+or send a pull request to
+.IR https://github.com/starshipfactory/doorky .
+.SH COPYRIGHT
+Copyright \(co 2016 Caoimhe Chaos, Starship Factory. All Rights Reserved.
+.PP
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the conditions outlined in the
+3-Clause BSD license are met.
