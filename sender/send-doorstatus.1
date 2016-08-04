@@ -20,6 +20,11 @@ from a shared secret, the name of the sensor, the submitted state and the
 current time stamp as seconds since Jan 1 1970, all represented in ASCII.
 .PP
 The value is checked every 30 seconds and reported only upon change.
+.PP
+The value is read from a GPIO pin using
+.IR gpioctl (1).
+A value of 0 shall indicate that the door is locked, and a value of 1 shall
+mean that the door is open.
 .SH FILES
 .PP
 .B send-doorstatus.sh

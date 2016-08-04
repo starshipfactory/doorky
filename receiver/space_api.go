@@ -47,15 +47,15 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		var lockInfo = new(doorky.SpaceAPIDoorLockSensor)
 		var name = door.GetName()
 		var ts time.Time
-		var locked bool
+		var isOpen bool
 
-		ts, locked, err = a.ts.LastValue(name)
+		ts, isOpen, err = a.ts.LastValue(name)
 		if err != nil {
 			log.Print("Error fetching door status for ", name, ": ", err)
 			continue
 		}
 
-		lockInfo.Value = proto.Bool(locked)
+		lockInfo.Value = proto.Bool(!isOpen)
 		lockInfo.Location = proto.String(door.GetLocation())
 		lockInfo.Name = proto.String(name)
 		lockInfo.Description = proto.String("Last update: " + ts.String())
@@ -66,7 +66,7 @@ func (a *SpaceAPI) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		md.Sensors.DoorLocked = append(md.Sensors.DoorLocked, lockInfo)
 
 		if a.conf.PrimaryDoor != nil && a.conf.GetPrimaryDoor() == name {
-			md.State.Open = proto.Bool(!locked)
+			md.State.Open = proto.Bool(locked)
 			md.State.Lastchange = proto.Int64(ts.Unix())
 		}
 	}

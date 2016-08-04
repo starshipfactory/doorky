@@ -1,7 +1,7 @@
 .\" Hey, EMACS: -*- nroff -*-
 .TH RECEIVER "1" "Aug 2016" "receiver"
 .SH NAME
-receiver \- 
+receiver \-
 .SM SpaceAPI
 data collector and reexporter
 .SH SYNOPSIS
@@ -19,6 +19,10 @@ A separate API is provided to allow submitting various types of data points via
 HTTP requests which will be provided to
 .SM SpaceAPI
 requestors as sensor data.
+.PP
+Door sensor data should be submitted as a boolean value (0, 1) indicating
+the "is-open" state of the door, i.e. 1 means the door is unlocked, and 0
+means the door is locked.
 .SH OPTIONS
 .TP
 .B \-\-config=PATH
