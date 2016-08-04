@@ -22,6 +22,11 @@ then
 	DOORNAME="door"
 fi
 
+if [ x"$DOORPIN" = x ]
+then
+	DOORPIN="2"
+fi
+
 if ! test -f "$HOME/.doorky/secret"
 then
 	echo "Missing ~/.doorky/secret" 1>&2
@@ -33,7 +38,7 @@ ntpdate -s "$NTP_SERVER"
 
 while true
 do
-	newstate=$(gpioctl 2)
+	newstate=$(gpioctl "$DOORPIN")
 
 	if [ x"$oldstate" = x"$newstate" ]
 	then
